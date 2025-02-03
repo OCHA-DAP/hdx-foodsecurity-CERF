@@ -1,0 +1,33 @@
+[tool.ruff]
+# Enable pycodestyle (E), pyflakes (F), isort (I), 
+# and all recommended rules
+select = ["E", "F", "I"]
+extend = ["recommended"]
+
+# Same as Black
+line-length = 88
+
+# Exclude files
+exclude = [
+    ".git",
+    ".ruff_cache",
+    "data",
+    "__pycache__",
+]
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+# Indent with spaces
+indent-style = "space"
+# Use 4 spaces for indentation
+indent-width = 4
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+combine-as-imports = true
+
+[tool.ruff.lint.flake8]
+max-line-length = 88  # Same as Black
+max-complexity = 10   # Maximum McCabe complexity
+extend-ignore = ["E203"]  # Ignore whitespace before ':' (Black compatibility)
