@@ -56,13 +56,13 @@ df = df[df['Phase'] == SEVERITY]
 
 ```python
 # Some cases where we have the same date of analysis and projection -- keep the one with the highest projection value
-# df = df.sort_values('Percentage', ascending=False)
-# df = df.drop_duplicates(subset=['Date of analysis', 'Country', 'From', 'To', 'Validity period'], keep='first')
+df = df.sort_values('Percentage', ascending=False)
+df = df.drop_duplicates(subset=['Date of analysis', 'Country', 'From', 'To', 'Validity period'], keep='first')
 
 # # Now what if we have additional duplicates of the validity period?
 # # Keep the one with the more recent Date of analysis
-# df = df.sort_values('Date of analysis', ascending=False)
-# df = df.drop_duplicates(subset=['Country', 'From', 'To'], keep='first')
+df = df.sort_values('Date of analysis', ascending=False)
+df = df.drop_duplicates(subset=['Country', 'From', 'To'], keep='first')
 ```
 
 ## Plot heatmap with all reference periods
@@ -278,7 +278,7 @@ create_heatmap(
     color_map='RdBu_r',
     colorbar_label='Z-Score (Standard Deviations from Mean)',
     title='Z-Score of Average IPC3+ Proportion of Population by Country',
-    output_filename='../plots/heatmap_zscore_all.png',
+    output_filename='../plots/heatmap_zscore_all_drop_dups.png',
     vmin=-3,
     vmax=4,
     center=0,
@@ -296,7 +296,7 @@ create_heatmap(
     color_map='RdBu_r',
     colorbar_label='Z-Score (Standard Deviations from Mean)',
     title=f"Z-Score of Average IPC3+ Proportion of Population by Country -- Above {THRESH}",
-    output_filename='../plots/heatmap_zscore_thresh.png',
+    output_filename='../plots/heatmap_zscore_thresh_drop_dups.png',
     vmin=-3,
     vmax=4,
     center=0,
@@ -316,4 +316,101 @@ create_heatmap(
     center=7.5,
     annot=True
 )
+```
+
+## Now save the periods
+
+```python
+threshold = THRESH
+df = z_score_heatmap
+
+results = []
+dates = df.columns.tolist()
+
+
+def get_period_abbrev(start_idx, end_idx, dates_list, is_circular):
+    n = len(dates_list)
+    month_letters = []
+
+    if is_circular and end_idx < start_idx:
+        # Handle circular period (e.g., November to February)
+        indices = list(range(start_idx, n)) + list(range(0, end_idx + 1))
+    else:
+        # Handle normal period (e.g., June to August)
+        indices = list(range(start_idx, end_idx + 1))
+
+    for i in indices:
+        month_letter = dates_list[i].strftime('%B')[0]
+        if month_letter:
+            month_letters.append(month_letter)
+
+    return ''.join(month_letters)
+
+for country in df.index:
+    values = df.loc[country].values
+    mask = np.where(np.isnan(values), 0, values > threshold).astype(int)
+
+    if np.all(mask == 0):
+        # No values above threshold
+        results.append({
+            'Country': country,
+            'Max_Streak': 0,
+            'Start_Date': None,
+            'End_Date': None,
+            'Max_Value': None,
+            'Is_Circular': False
+        })
+        continue
+
+    # For circular data, we duplicate the array to find streaks that wrap around
+    extended_mask = np.concatenate([mask, mask])
+    extended_values = np.concatenate([values, values])
+
+    # Find all sequences of 1s
+    extended_starts = np.where(np.concatenate(([0], extended_mask[:-1])) - extended_mask < 0)[0]
+    extended_ends = np.where(extended_mask - np.concatenate((extended_mask[1:], [0])) > 0)[0]
+    extended_lengths = extended_ends - extended_starts + 1
+    max_length = np.max(extended_lengths)
+
+    # Get all streaks that have the maximum length
+    max_length_indices = np.where(extended_lengths == max_length)[0]
+
+    # For each max-length streak, find the maximum z-score
+    max_zscores = []
+    for idx in max_length_indices:
+        start_pos = extended_starts[idx]
+        end_pos = extended_ends[idx]
+        streak_values = extended_values[start_pos:end_pos+1]
+        # Filter out NaN values when finding max
+        valid_values = streak_values[~np.isnan(streak_values)]
+        max_zscore = np.max(valid_values) if len(valid_values) > 0 else np.nan
+        max_zscores.append(max_zscore)
+
+    # Find the index of the streak with the highest max z-score
+    if len(max_zscores) > 0:
+        best_streak_idx = max_length_indices[np.nanargmax(max_zscores)]
+        start_idx = extended_starts[best_streak_idx]
+        end_idx = extended_ends[best_streak_idx]
+        best_max_value = max_zscores[np.nanargmax(max_zscores)]
+
+        # Adjust indices for the circular nature
+        n = len(mask)
+        start_date_idx = start_idx % n
+        end_date_idx = end_idx % n
+        is_circular = start_idx // n != end_idx // n
+
+        period_abbrev = get_period_abbrev(start_date_idx, end_date_idx, dates, is_circular)
+
+        results.append({
+            'Country': country,
+            'Num_Months': max_length,
+            'Start_Month': dates[start_date_idx].strftime('%B'),
+            'End_Month': dates[end_date_idx].strftime('%B'),
+            'Period': period_abbrev,
+        })
+```
+
+```python
+peak_lean_season_summary = pd.DataFrame(results)
+ocha.upload_csv_to_blob(peak_lean_season_summary, f"{PROJECT_PREFIX}/peak_lean_season_summary.csv")
 ```
