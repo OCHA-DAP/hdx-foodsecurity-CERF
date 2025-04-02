@@ -2,7 +2,7 @@ import pandas as pd
 import ocha_stratus as ocha
 from datetime import datetime, timedelta
 
-from src.utils.data_wrangling import standardize_data
+from src.utils.data_wrangling import standardize_data, calculate_overlap, print_info_single_country
 
 SEVERITY = '3+'
 PROJECT_PREFIX = "ds-ufe-food-security"
@@ -62,14 +62,7 @@ final_df = final_df.rename(columns={'Start_Month': 'From_historical', 'End_Month
 # # Print some info
 #
 # for ii in range(0, len(final_df)):
-#     print(f"In the last year, for {final_df.loc[ii, 'Country' ]}, the highest percentage of people in IPC 3+ phase was {final_df.loc[ii, 'Percentage' ]} \n"
-#           f"which corresponds to {final_df.loc[ii, 'Number' ]} people. This figure is {final_df.loc[ii, 'Validity period' ]} for the period from {final_df.loc[ii, 'From' ]} to {final_df.loc[ii, 'To' ]}." )
-#     print(f"The previous year the corresponding number was  {final_df.loc[ii, 'Number_1ago' ]}")
-#     if final_df.loc[ii, "Difference"]>0:
-#         print(f"The number of people in IPC 3+ phase increased of { final_df.loc[ii, "Difference"]} people")
-#     else:
-#         print(f"The number of people in IPC 3+ phase decreased of {-final_df.loc[ii, "Difference"]} people")
-#     print("-----")
+print_info_single_country(df=final_df, iso3="AFG")
 # Convert dates to datetime
 final_df["From"] = pd.to_datetime(final_df["From"])
 final_df["To"] = pd.to_datetime(final_df["To"])
@@ -86,33 +79,6 @@ final_df["To_historical"] = final_df["To_historical"].map(month_name_to_number)
 
 # Calculate total period in days
 final_df["Total days"] = (final_df["To"] - final_df["From"]).dt.days
-
-
-# Function to calculate overlap in days
-def calculate_overlap(row):
-    if not pd.isna(row["From_historical"]):
-        # Extract periods
-        start_date = row["From"]
-        end_date = row["To"]
-
-        # Historical period months (fixed within the same year)
-        historical_start_date = pd.Timestamp(year=start_date.year, month=int(row["From_historical"]), day=1)
-        historical_end_date = pd.Timestamp(year=start_date.year, month=int(row["To_historical"]), day=1) + pd.offsets.MonthEnd(0)
-
-        # Adjust historical range to wrap the year if necessary
-        if historical_start_date > historical_end_date:
-            historical_end_date = historical_end_date + pd.offsets.DateOffset(years=1)
-
-        # Calculate intersection of periods
-        overlap_start = max(start_date, historical_start_date)
-        overlap_end = min(end_date, historical_end_date)
-
-        # Calculate overlap days
-        overlap_days = max(0, (overlap_end - overlap_start).days)
-    else:
-        overlap_days = 0
-    return overlap_days
-
 
 # Apply overlap calculation
 final_df["Overlap days"] = final_df.apply(calculate_overlap, axis=1)
