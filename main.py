@@ -18,13 +18,14 @@ df = ocha.load_csv_from_blob(f"{PROJECT_PREFIX}/ipc_global_national_long.csv", s
 df = standardize_data(df)
 df = df[df['Phase'] == SEVERITY]
 
-# Filter data for only values regarding the last year or future (should future be included?)
+# Filter data for only values regarding the last year or future
 filtered_df = df[(x_one_year <= df["From"]) | ((df["From"] <= x_one_year) & (x_one_year <= df["To"]))]
 
-# Group by Country and Validity Period, get the row with the max Percentage
-grouped_df = filtered_df.loc[filtered_df.groupby(["Country", "Validity period"])['Percentage'].idxmax()]
+# If same period present from multiple report, get more recent
+filtered_df = filtered_df.sort_values(['Date of analysis'], ascending=False)
+filtered_df = filtered_df.drop_duplicates(subset=['Country', "From", "To"], keep='first')
 # NOTE: which is the criteria here for selecting?
-grouped_df = grouped_df.sort_values('Percentage', ascending=False)
+grouped_df = filtered_df.sort_values('Percentage', ascending=False)
 grouped_df = grouped_df.drop_duplicates(subset=['Country'], keep='first')
 
 grouped_df["From_one_year_ago"] = pd.to_datetime(grouped_df["From"] - pd.DateOffset(years=1))
@@ -60,9 +61,8 @@ final_df = final_df.merge(calendar[["Country", "Start_Month", "End_Month"]], how
 final_df = final_df.rename(columns={'Start_Month': 'From_historical', 'End_Month': 'To_historical'})
 #
 # # Print some info
-#
-# for ii in range(0, len(final_df)):
-print_info_single_country(df=final_df, iso3="AFG")
+
+#print_info_single_country(df=final_df, iso3="AFG")
 # Convert dates to datetime
 final_df["From"] = pd.to_datetime(final_df["From"])
 final_df["To"] = pd.to_datetime(final_df["To"])
@@ -87,6 +87,5 @@ final_df["Overlap days"] = final_df.apply(calculate_overlap, axis=1)
 final_df["Overlap months"] =  final_df["Overlap days"]// 30
 final_df["Total months"] =  final_df["Total days"]// 30
 final_df["Overlap percentage"] = (final_df["Overlap months"] / final_df["Total months"]) * 100
-final_df.drop(["Overlap days", "Total days"], inplace=True)
-final_df.rename({"Difference"} , inplace=True)
+final_df.drop(["Overlap days", "Total days"], axis=1, inplace=True)
 final_df.to_csv(f"peak_hunger_period_{x.strftime("%Y%m%d")}.csv")
