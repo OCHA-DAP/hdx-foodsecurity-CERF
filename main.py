@@ -1,6 +1,7 @@
 import pandas as pd
 import ocha_stratus as ocha
 from datetime import datetime, timedelta
+import numpy as np
 
 from src.utils.data_wrangling import standardize_data, calculate_overlap, print_info_single_country
 
@@ -84,8 +85,16 @@ final_df["Total days"] = (final_df["To"] - final_df["From"]).dt.days
 final_df["Overlap days"] = final_df.apply(calculate_overlap, axis=1)
 
 # Calculate percentage
-final_df["Overlap months"] =  final_df["Overlap days"]// 30
-final_df["Total months"] =  final_df["Total days"]// 30
-final_df["Overlap percentage"] = (final_df["Overlap months"] / final_df["Total months"]) * 100
+final_df["Overlap_months"] =  final_df["Overlap days"]// 30
+final_df["Total_months_peak_hunger_period"] =  final_df["Total days"]// 30
+
+month_to = final_df["To_historical"]
+month_from = final_df["From_historical"]
+
+condition = month_to >= month_from
+diff = np.where(condition, month_to - month_from + 1, (12 - month_from + 1) + month_to)
+
+final_df["Total_months_historical_peak_hunger_period"] = diff
+final_df["Overlap_percentage"] = np.maximum(((final_df["Overlap_months"] / final_df["Total_months_peak_hunger_period"]) * 100),((final_df["Overlap_months"] / final_df["Total_months_historical_peak_hunger_period"]) * 100))
 final_df.drop(["Overlap days", "Total days"], axis=1, inplace=True)
 final_df.to_csv(f"peak_hunger_period_{x.strftime("%Y%m%d")}.csv")
