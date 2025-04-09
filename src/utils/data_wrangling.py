@@ -1,12 +1,13 @@
 import pandas as pd
 
-def standardize_data(df):
+def standardize_data(df:pd.DataFrame)->pd.DataFrame:
     """
+    Standardizes IPC data
 
     Args:
-        df:
+        df: dataframe containing IPC data
 
-    Returns:
+    Returns: Dataframe with standardized IPC data
 
     """
     df['Number'] = pd.to_numeric(df['Number'])
@@ -21,6 +22,13 @@ def standardize_data(df):
 
 
 def print_info_single_country(df: pd.DataFrame, iso3: str):
+    """
+    Prints a summary for the selected country
+
+    Args:
+        df: pandas dataframe from which all the information is extracted
+        iso3: country for which the information is printed
+    """
     row=df[df['Country'] == iso3]
     print(
         f"In the last year, for {iso3}, the highest percentage of people in IPC 3+ phase was {row['Percentage']} \n"
@@ -33,13 +41,16 @@ def print_info_single_country(df: pd.DataFrame, iso3: str):
 
 
 # Function to calculate overlap in days
-def calculate_overlap(row):
+def calculate_overlap(row: pd.Series) -> int:
     """
+    Calculates days of overlap between the Peak Hunger Period (PHP) and the
+    Historical Peak Hunger Period (HPHP).
 
     Args:
-        row:
+        row: pd.Series containing info regarding PHP and HPHP for a single country
 
-    Returns:
+    Returns: number of overlap days
+
 
     """
     if not pd.isna(row["From_historical"]):
@@ -64,3 +75,4 @@ def calculate_overlap(row):
     else:
         overlap_days = 0
     return overlap_days
+
