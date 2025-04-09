@@ -95,6 +95,6 @@ condition = month_to >= month_from
 diff = np.where(condition, month_to - month_from + 1, (12 - month_from + 1) + month_to)
 
 final_df["Total_months_historical_peak_hunger_period"] = diff
-final_df["Overlap_percentage"] = np.maximum(((final_df["Overlap_months"] / final_df["Total_months_peak_hunger_period"]) * 100),((final_df["Overlap_months"] / final_df["Total_months_historical_peak_hunger_period"]) * 100))
+final_df["Overlap_percentage"] = final_df["Overlap_months"] / final_df["Total_months_historical_peak_hunger_period"] * 100
 final_df.drop(["Overlap days", "Total days"], axis=1, inplace=True)
 final_df.to_csv(f"peak_hunger_period_{x.strftime("%Y%m%d")}.csv")
