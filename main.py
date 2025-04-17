@@ -34,12 +34,10 @@ if __name__ == "__main__":
     for severity in ["3+", "4", "5"]:
         df_summary = df_peak
         df_summary["phase"] = severity
+        fname = f"{REF_YEAR}_ipc_summary_{severity}_{now_formatted}.csv"
         for year in [REF_YEAR, REF_YEAR - 1, REF_YEAR - 2]:
-            fname = f"{REF_YEAR}_ipc_summary_{severity}_{now_formatted}.csv"
             df_matched = ipc.match_peak_hunger_period(df, df_peak, year, severity)
             df_summary = df_summary.merge(df_matched, how="left")
-            stratus.upload_csv_to_blob(
-                df_summary, f"{PROJECT_PREFIX}/{fname}", stage="dev"
-            )
-            df_summary.to_csv(fname)
-    logger.info("Output file saved successfully to blob")
+        stratus.upload_csv_to_blob(df_summary, f"{PROJECT_PREFIX}/{fname}", stage="dev")
+        df_summary.to_csv(fname)
+        logger.info(f"Output file saved successfully to blob: {fname}")
