@@ -2,14 +2,11 @@ import ocha_stratus as stratus
 import pandas as pd
 import logging
 import coloredlogs
-from src.config import LOG_LEVEL
+from src.config import LOG_LEVEL, PROJECT_PREFIX
 
 
 logger = logging.getLogger(__name__)
 coloredlogs.install(level=LOG_LEVEL, logger=logger)
-
-
-PROJECT_PREFIX = "ds-ufe-food-security"
 
 
 def get_raw_ipc() -> pd.DataFrame:
@@ -26,21 +23,19 @@ def get_raw_ipc() -> pd.DataFrame:
     )[1:]
 
 
-def process_raw_ipc(df: pd.DataFrame, severity: str = "3+") -> pd.DataFrame:
+def process_raw_ipc(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Process raw IPC data by standardizing and filtering by severity phase.
+    Process raw IPC data by standardizing columns.
 
     Parameters
     ----------
     df : pandas.DataFrame
         Raw IPC data.
-    severity : str, optional
-        IPC phase severity to filter for, default is "3+".
 
     Returns
     -------
     pandas.DataFrame
-        Processed IPC data filtered to specified severity phase.
+        Processed IPC data .
     """
     df = df.copy()
     # Standardize the data
@@ -54,11 +49,12 @@ def process_raw_ipc(df: pd.DataFrame, severity: str = "3+") -> pd.DataFrame:
     df["To"] = pd.to_datetime(df["To"])
     df["year"] = df["To"].dt.year
 
-    # And return filtered to the specific phase
-    return df[df["Phase"] == severity]
+    return df
 
 
-def identify_peak_hunger_period(df: pd.DataFrame, year: int) -> pd.DataFrame:
+def identify_peak_hunger_period(
+    df: pd.DataFrame, year: int, severity: str
+) -> pd.DataFrame:
     """
     Identify the peak hunger period for each country in a given year.
 
@@ -71,6 +67,8 @@ def identify_peak_hunger_period(df: pd.DataFrame, year: int) -> pd.DataFrame:
         Processed IPC data.
     year : int
         Year to filter data for.
+    severity : str, optional
+        IPC phase severity to filter for.
 
     Returns
     -------
@@ -81,7 +79,7 @@ def identify_peak_hunger_period(df: pd.DataFrame, year: int) -> pd.DataFrame:
     df = df.copy()
     # Filter to a specific year
     # Note that `year` is associated with the `To` date
-    df_filtered = df[df["year"] == year]
+    df_filtered = df[(df["year"] == year) & (df["Phase"] == severity)]
     # Get the most recent report if there are duplicates for the same time period
     df_filtered = df_filtered.sort_values(["Date of analysis"], ascending=False)
     df_filtered = df_filtered.drop_duplicates(
@@ -112,7 +110,7 @@ def identify_peak_hunger_period(df: pd.DataFrame, year: int) -> pd.DataFrame:
 
 # TODO: Logging for cases where there aren't matches in the period
 def match_peak_hunger_period(
-    df: pd.DataFrame, df_peak: pd.DataFrame, year: int
+    df: pd.DataFrame, df_peak: pd.DataFrame, year: int, severity: str
 ) -> pd.DataFrame:
     """
     Match data from a specific year to the peak hunger periods identified in a reference year.
@@ -128,6 +126,9 @@ def match_peak_hunger_period(
         DataFrame with peak hunger reference periods, as returned by identify_peak_hunger_period().
     year : int
         Year for which to extract matching data.
+    severity : str
+        IPC phase severity to filter for.
+
 
     Returns
     -------
@@ -136,10 +137,9 @@ def match_peak_hunger_period(
         the peak hunger period, with columns renamed to include the year.
     """
     ref_year = int(df_peak.reference_year[0])
-    df = df.copy()
 
     # Create a new DataFrame explicitly instead of a view
-    df_year = df[df.year == year].copy()
+    df_year = df[(df.year == year) & (df["Phase"] == severity)].copy()
 
     # Now use loc to set the new columns
     df_year.loc[:, f"{year}_report_period"] = df_year.apply(
