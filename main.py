@@ -8,7 +8,7 @@ from src.config import LOG_LEVEL, PROJECT_PREFIX
 from src.utils import date_utils
 
 # References for identifying the peak hunger period
-REF_YEAR = 2024
+REF_YEAR = 2025
 REF_SEVERITY = "3+"
 
 logger = logging.getLogger(__name__)
@@ -19,6 +19,7 @@ if __name__ == "__main__":
     now = datetime.now()
     now_formatted = now.strftime("%Y-%m-%d")
 
+    # Get the raw data and find the peak hunger periods from the reference year
     df_raw = ipc.get_raw_ipc()
     df = ipc.process_raw_ipc(df_raw)
     logger.info(f"Identifying peak hunger periods based on {REF_YEAR}")

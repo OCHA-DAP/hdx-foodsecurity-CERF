@@ -3,6 +3,7 @@ import pandas as pd
 import logging
 import coloredlogs
 from src.config import LOG_LEVEL, PROJECT_PREFIX
+from src.utils import date_utils
 
 
 logger = logging.getLogger(__name__)
@@ -148,15 +149,7 @@ def match_peak_hunger_period(
 
     # Set ref_period using loc
     df_year.loc[:, "ref_period"] = df_year.apply(
-        lambda row: pd.Interval(
-            pd.Timestamp(
-                year=ref_year - (1 if row["From"].month > row["To"].month else 0),
-                month=row["From"].month,
-                day=row["From"].day,
-            ),
-            pd.Timestamp(year=ref_year, month=row["To"].month, day=row["To"].day),
-            closed="both",
-        ),
+        lambda row: date_utils.get_ref_period(row, ref_year),
         axis=1,
     )
 
