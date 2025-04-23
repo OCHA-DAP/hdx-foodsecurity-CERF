@@ -8,7 +8,7 @@ from src.config import LOG_LEVEL, PROJECT_PREFIX
 from src.utils import date_utils
 
 # References for identifying the peak hunger period
-REF_YEAR = 2025
+REF_YEAR = 2024
 REF_SEVERITY = "3+"
 
 logger = logging.getLogger(__name__)
@@ -36,11 +36,10 @@ if __name__ == "__main__":
     for severity in ["3+", "4", "5"]:
         df_summary = df_peak
         df_summary["phase"] = severity
-        fname = f"{REF_YEAR}_ipc_summary_{severity}_{now_formatted}.csv"
+        fname = f"annualized_ipc_summary_{REF_YEAR}_{severity}_{now_formatted}.csv"
         for year in years:
             df_matched = ipc.match_peak_hunger_period(df, df_peak, year, severity)
             df_summary = df_summary.merge(df_matched, how="left")
         df_summary = ipc.add_yoy_changes(df_summary, years)
         stratus.upload_csv_to_blob(df_summary, f"{PROJECT_PREFIX}/{fname}", stage="dev")
-        df_summary.to_csv(fname)
         logger.info(f"Output file saved successfully to blob: {fname}")

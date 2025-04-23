@@ -211,10 +211,14 @@ def add_yoy_changes(df, years):
         col_name = f"{newer}_{older}_change"
 
         # Calculate the percentage change
-        df[col_name] = (
-            (df[f"{newer}_percentage"] - df[f"{older}_percentage"])
-            / df[f"{older}_percentage"].replace(0, float("nan"))
-        ) * 100
+        df[col_name] = round(
+            (
+                (df[f"{newer}_percentage"] - df[f"{older}_percentage"])
+                / df[f"{older}_percentage"].replace(0, float("nan"))
+            )
+            * 100,
+            2,
+        )
 
         # Handle division by zero: if older percentage is 0, set change to NaN
         # Replace inf with NaN (happens when older value is 0)
