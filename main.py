@@ -14,6 +14,7 @@ REF_SEVERITY = "3+"
 logger = logging.getLogger(__name__)
 coloredlogs.install(level=LOG_LEVEL, logger=logger)
 
+years = [REF_YEAR, REF_YEAR - 1, REF_YEAR - 2]
 
 if __name__ == "__main__":
     now = datetime.now()
@@ -36,9 +37,10 @@ if __name__ == "__main__":
         df_summary = df_peak
         df_summary["phase"] = severity
         fname = f"{REF_YEAR}_ipc_summary_{severity}_{now_formatted}.csv"
-        for year in [REF_YEAR, REF_YEAR - 1, REF_YEAR - 2]:
+        for year in years:
             df_matched = ipc.match_peak_hunger_period(df, df_peak, year, severity)
             df_summary = df_summary.merge(df_matched, how="left")
+        df_summary = ipc.add_yoy_changes(df_summary, years)
         stratus.upload_csv_to_blob(df_summary, f"{PROJECT_PREFIX}/{fname}", stage="dev")
         df_summary.to_csv(fname)
         logger.info(f"Output file saved successfully to blob: {fname}")

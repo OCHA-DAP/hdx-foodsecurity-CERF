@@ -183,3 +183,41 @@ def match_peak_hunger_period(
         ]
     ].sort_values("Country")
     return df_clean
+
+
+def add_yoy_changes(df, years):
+    """
+    Add year-over-year percent change columns to the dataframe.
+
+    Parameters:
+    -----------
+    df : pandas DataFrame
+        DataFrame containing food insecurity data
+    years : list
+        List of three consecutive years in ascending order, e.g. [2023, 2024, 2025]
+
+    Returns:
+    --------
+    pandas DataFrame
+        DataFrame with added YoY change columns
+    """
+    # Convert years to strings
+    years_str = [str(year) for year in years]
+
+    # Generate column names for YoY changes
+    newer_older_pairs = [(years_str[2], years_str[1]), (years_str[1], years_str[0])]
+
+    for newer, older in newer_older_pairs:
+        col_name = f"{newer}_{older}_change"
+
+        # Calculate the percentage change
+        df[col_name] = (
+            (df[f"{newer}_percentage"] - df[f"{older}_percentage"])
+            / df[f"{older}_percentage"].replace(0, float("nan"))
+        ) * 100
+
+        # Handle division by zero: if older percentage is 0, set change to NaN
+        # Replace inf with NaN (happens when older value is 0)
+        df[col_name] = df[col_name].replace([float("inf"), -float("inf")], float("nan"))
+
+    return df
