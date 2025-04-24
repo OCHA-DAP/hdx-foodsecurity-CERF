@@ -36,7 +36,8 @@ def sidebar_controls():
                 [
                     dcc.Markdown(
                         """
-                    This application displays processed IPC data for use by CERF. See
+                    This application displays processed IPC data for use by CERF  to identify year-on-year changes
+                    in food security across countries. See
                     [here](https://docs.google.com/document/d/15o6f5yPIl3p3sj7NNw2MoHg6f7DHzwtCPfKRlfU2PJE/edit?tab=t.0#heading=h.ieffsjdjd8lt)
                     for an overview of the methods and description of each column.
                     """,
@@ -79,7 +80,7 @@ def sidebar_controls():
                     dcc.Markdown(
                         """
                     For reference, historical IPC data has been processed to estimate a single peak hunger period per country.
-                    Overlap with these periods are reported in the `reference_period_overlap` column of the table visualized here.
+                    Overlap with these periods are reported in the `*_overlap` columns of the table visualized here.
                     """,
                         style={"marginBottom": "7px"},
                     )
