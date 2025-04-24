@@ -162,6 +162,15 @@ def load_data(severity, date):
                     },
                 ],
             }
+        elif col_def["field"] == "reference_period_overlap":
+            col_def["cellStyle"] = {
+                "styleConditions": [
+                    {
+                        "condition": "params.value == 0",
+                        "style": {"backgroundColor": "#f7a29c"},
+                    },
+                ],
+            }
 
         styled_column_defs.append(col_def)
     return df.to_dict("records"), styled_column_defs
