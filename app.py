@@ -39,7 +39,7 @@ def sidebar_controls():
                         """
                     This application displays processed IPC data for use by CERF. See
                     [here](https://docs.google.com/document/d/15o6f5yPIl3p3sj7NNw2MoHg6f7DHzwtCPfKRlfU2PJE/edit?tab=t.0#heading=h.ieffsjdjd8lt)
-                    for a full overview of the methods and description of each column.
+                    for an overview of the methods and description of each column.
                     """,
                         style={"marginBottom": "7px"},
                     )
