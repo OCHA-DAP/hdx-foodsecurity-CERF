@@ -171,6 +171,8 @@ def load_data(severity, date):
                     },
                 ],
             }
+        elif col_def["field"] == "Country":
+            col_def["pinned"] = "left"
 
         styled_column_defs.append(col_def)
     return df.to_dict("records"), styled_column_defs

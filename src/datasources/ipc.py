@@ -194,7 +194,7 @@ def add_yoy_changes(df, years):
     df : pandas DataFrame
         DataFrame containing food insecurity data
     years : list
-        List of three consecutive years in ascending order, e.g. [2023, 2024, 2025]
+        List of three consecutive years in descending order, e.g. [2025, 2024, 2023]
 
     Returns:
     --------
@@ -205,7 +205,7 @@ def add_yoy_changes(df, years):
     years_str = [str(year) for year in years]
 
     # Generate column names for YoY changes
-    newer_older_pairs = [(years_str[2], years_str[1]), (years_str[1], years_str[0])]
+    newer_older_pairs = [(years_str[1], years_str[2]), (years_str[0], years_str[1])]
 
     for newer, older in newer_older_pairs:
         col_name = f"{newer}_{older}_change"
