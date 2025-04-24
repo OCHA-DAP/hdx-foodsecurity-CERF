@@ -215,8 +215,7 @@ def add_yoy_changes(df, years):
             (
                 (df[f"{newer}_percentage"] - df[f"{older}_percentage"])
                 / df[f"{older}_percentage"].replace(0, float("nan"))
-            )
-            * 100,
+            ),
             2,
         )
 

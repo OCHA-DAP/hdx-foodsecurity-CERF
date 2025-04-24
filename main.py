@@ -40,6 +40,12 @@ if __name__ == "__main__":
         for year in years:
             df_matched = ipc.match_peak_hunger_period(df, df_peak, year, severity)
             df_summary = df_summary.merge(df_matched, how="left")
+            df_summary[f"{year}_report_period"] = df_summary[
+                f"{year}_report_period"
+            ].apply(date_utils.format_interval)
         df_summary = ipc.add_yoy_changes(df_summary, years)
+        df_summary["reference_period"] = df_summary["reference_period"].apply(
+            date_utils.format_interval
+        )
         stratus.upload_csv_to_blob(df_summary, f"{PROJECT_PREFIX}/{fname}", stage="dev")
         logger.info(f"Output file saved successfully to blob: {fname}")

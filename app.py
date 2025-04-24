@@ -138,11 +138,33 @@ def export_data_as_csv(n_clicks, severity, date):
     Input("date-dropdown", "value"),
 )
 def load_data(severity, date):
-    print("loading data...")
     df = stratus.load_csv_from_blob(
         f"ds-ufe-food-security/annualized_ipc_summary_2024_{severity}_{date}.csv"
     )
-    return df.to_dict("records"), [{"field": i} for i in df.columns]
+
+    column_defs = [{"field": i} for i in df.columns]
+    styled_column_defs = []
+    for col_def in column_defs:
+        if "_percentage" in col_def["field"]:
+            col_def["cellStyle"] = {
+                "function": "params.value && {'backgroundColor': 'rgb(242,100,90,' + params.value/1 + ')'}"
+            }
+        elif "_change" in col_def["field"]:
+            col_def["cellStyle"] = {
+                "styleConditions": [
+                    {
+                        "condition": "params.value < 0",
+                        "style": {"color": "#18998f", "fontWeight": "bold"},
+                    },
+                    {
+                        "condition": "params.value > 0",
+                        "style": {"color": "#c25048", "fontWeight": "bold"},
+                    },
+                ],
+            }
+
+        styled_column_defs.append(col_def)
+    return df.to_dict("records"), styled_column_defs
 
 
 if __name__ == "__main__":

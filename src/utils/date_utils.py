@@ -1,5 +1,6 @@
 import pandas as pd
 from calendar import month_name
+import numpy as np
 
 
 def get_period_name(reference_interval):
@@ -51,3 +52,11 @@ def get_ref_period(row, ref_year):
     to_date = pd.Timestamp(year=ref_year, month=row["To"].month, day=to_days)
 
     return pd.Interval(from_date, to_date, closed="both")
+
+
+def format_interval(interval):
+    if pd.isna(interval):
+        return np.nan
+    start_date = interval.left.strftime("%b %Y")
+    end_date = interval.right.strftime("%b %Y")
+    return f"{start_date} to {end_date}"
