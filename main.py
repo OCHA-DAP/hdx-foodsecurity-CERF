@@ -47,5 +47,7 @@ if __name__ == "__main__":
         df_summary["reference_period"] = df_summary["reference_period"].apply(
             date_utils.format_interval
         )
-        stratus.upload_csv_to_blob(df_summary, f"{PROJECT_PREFIX}/{fname}", stage="dev")
+        stratus.upload_csv_to_blob(
+            df_summary, f"{PROJECT_PREFIX}/processed/ipc_updates/{fname}", stage="dev"
+        )
         logger.info(f"Output file saved successfully to blob: {fname}")

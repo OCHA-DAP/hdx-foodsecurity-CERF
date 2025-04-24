@@ -1,7 +1,6 @@
 import dash_bootstrap_components as dbc
-from dash import html, Output, Input, callback, State
+from dash import html, Output, Input, callback, State, dcc
 import dash
-from dash import dcc
 import dash_ag_grid as dag
 import ocha_stratus as stratus
 
@@ -45,7 +44,6 @@ def sidebar_controls():
                     )
                 ]
             ),
-            html.Hr(),
             html.Div(
                 [
                     html.P("Select severity level:"),
@@ -62,8 +60,9 @@ def sidebar_controls():
                     html.P("Select date updated:"),
                     dbc.Select(
                         id="date-dropdown",
-                        options=["2025-04-23"],
-                        value="2025-04-23",
+                        # TODO: This is hard coded
+                        options=["2025-04-24"],
+                        value="2025-04-24",
                         className="mb-3",
                     ),
                 ]
@@ -71,6 +70,29 @@ def sidebar_controls():
             html.Div(
                 [
                     dbc.Button("Download to CSV", color="primary", id="csv-button"),
+                ],
+                className="d-grid gap-2",
+            ),
+            html.Hr(),
+            html.Div(
+                [
+                    dcc.Markdown(
+                        """
+                    For reference, historical IPC data has been processed to estimate a single peak hunger period per country.
+                    Overlap with these periods are reported in the `reference_period_overlap` column of the table visualized here.
+                    """,
+                        style={"marginBottom": "7px"},
+                    )
+                ]
+            ),
+            html.Div(
+                [
+                    dbc.Button(
+                        "Download Hunger Periods",
+                        color="secondary",
+                        id="reference-download-button",
+                    ),
+                    dcc.Download(id="reference-download"),
                 ],
                 className="d-grid gap-2",
             ),
@@ -132,6 +154,20 @@ def export_data_as_csv(n_clicks, severity, date):
 
 
 @callback(
+    Output("reference-download", "data"),
+    Input("reference-download-button", "n_clicks"),
+    prevent_initial_call=True,
+)
+def download_hunger_period_reference(n_clicks):
+    df = stratus.load_csv_from_blob(
+        "ds-ufe-food-security/processed/reference_periods/cleaned_reference_periods.csv"
+    )
+    if n_clicks:
+        return dcc.send_data_frame(df.to_csv, "reference_hunger_periods.csv")
+    return dash.no_update
+
+
+@callback(
     Output("data-grid", "rowData"),
     Output("data-grid", "columnDefs"),
     Input("severity-dropdown", "value"),
@@ -139,7 +175,7 @@ def export_data_as_csv(n_clicks, severity, date):
 )
 def load_data(severity, date):
     df = stratus.load_csv_from_blob(
-        f"ds-ufe-food-security/annualized_ipc_summary_2024_{severity}_{date}.csv"
+        f"ds-ufe-food-security/processed/ipc_updates/annualized_ipc_summary_2024_{severity}_{date}.csv"
     )
 
     column_defs = [{"field": i} for i in df.columns]

@@ -7,7 +7,7 @@ jupyter:
       format_version: '1.3'
       jupytext_version: 1.16.3
   kernelspec:
-    display_name: venv
+    display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
@@ -22,7 +22,7 @@ from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import ocha_stratus as ocha
+import ocha_stratus as stratus
 
 plt.rcParams.update({
     'font.size': 14,
@@ -37,7 +37,7 @@ SEVERITY = '3+'
 PROJECT_PREFIX = "ds-ufe-food-security"
 
 # Downloaded from https://data.humdata.org/dataset/global-acute-food-insecurity-country-data
-df = ocha.load_csv_from_blob(f"{PROJECT_PREFIX}/ipc_global_national_long.csv", stage="dev")[1:]
+df = stratus.load_csv_from_blob(f"{PROJECT_PREFIX}/raw/ipc_global_national_long.csv", stage="dev")[1:]
 df['Number'] = pd.to_numeric(df['Number'])
 df['Percentage'] = pd.to_numeric(df['Percentage'])
 df['Total country population'] = pd.to_numeric(df['Total country population'])
@@ -148,9 +148,9 @@ for iso3 in df.Country.unique():
     for pos in month_positions[1:]:
         plt.axvline(x=pos, color='white', linestyle='-', linewidth=0.1)
 
-    plt.savefig(f"../plots/country/{iso3}_heatmap_percentage_all.png", dpi=300, bbox_inches='tight')
+    #plt.savefig(f"../plots/country/{iso3}_heatmap_percentage_all.png", dpi=300, bbox_inches='tight')
     plt.close()
-    plt.show()
+    #plt.show()
 
 ```
 
@@ -412,5 +412,5 @@ for country in df.index:
 
 ```python
 peak_lean_season_summary = pd.DataFrame(results)
-ocha.upload_csv_to_blob(peak_lean_season_summary, f"{PROJECT_PREFIX}/peak_lean_season_summary.csv")
+stratus.upload_csv_to_blob(peak_lean_season_summary, f"{PROJECT_PREFIX}/processed/reference_periods/peak_lean_season_summary.csv")
 ```
