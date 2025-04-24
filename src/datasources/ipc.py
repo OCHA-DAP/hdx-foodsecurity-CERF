@@ -20,7 +20,7 @@ def get_raw_ipc() -> pd.DataFrame:
         Raw IPC data in long format
     """
     return stratus.load_csv_from_blob(
-        f"{PROJECT_PREFIX}/ipc_global_national_long.csv", stage="dev"
+        f"{PROJECT_PREFIX}/raw/ipc_global_national_long.csv", stage="dev"
     )[1:]
 
 

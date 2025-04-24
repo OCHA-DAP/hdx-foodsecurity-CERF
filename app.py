@@ -198,7 +198,7 @@ def load_data(severity, date):
                     },
                 ],
             }
-        elif col_def["field"] == "reference_period_overlap":
+        elif "_overlap" in col_def["field"]:
             col_def["cellStyle"] = {
                 "styleConditions": [
                     {

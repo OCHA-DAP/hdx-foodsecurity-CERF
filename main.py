@@ -28,9 +28,17 @@ if __name__ == "__main__":
 
     # Check the overlap in reference periods
     df_periods = stratus.load_csv_from_blob(
-        blob_name=f"{PROJECT_PREFIX}/peak_lean_season_summary_w_acaps.csv"
+        blob_name=f"{PROJECT_PREFIX}/processed/reference_periods/cleaned_reference_periods.csv"
     )
-    df_peak = date_utils.apply_overlap(df_peak, df_periods)
+    df_peak = date_utils.apply_overlap(
+        df_peak, df_periods, "data_driven_period", "data_driven_period_overlap"
+    )
+    df_peak = date_utils.apply_overlap(
+        df_peak, df_periods, "expert_period_1", "expert_period_1_overlap"
+    )
+    df_peak = date_utils.apply_overlap(
+        df_peak, df_periods, "expert_period_2", "expert_period_2_overlap"
+    )
 
     # Now calculate the values for each year
     for severity in ["3+", "4", "5"]:
