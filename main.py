@@ -5,7 +5,7 @@ from datetime import datetime
 
 from src.datasources import ipc
 from src.config import LOG_LEVEL, PROJECT_PREFIX
-from src.utils import date_utils
+from src.utils import date_utils, format_utils
 
 # References for identifying the peak hunger period
 REF_YEAR = 2024
@@ -21,15 +21,14 @@ if __name__ == "__main__":
     now_formatted = now.strftime("%Y-%m-%d")
 
     # Get the raw data and find the peak hunger periods from the reference year
-    df_raw = ipc.get_raw_ipc()
-    df = ipc.process_raw_ipc(df_raw)
     logger.info(f"Identifying peak hunger periods based on {REF_YEAR}")
+    df = ipc.get_all_ipc()
     df_peak = ipc.identify_peak_hunger_period(df, REF_YEAR, REF_SEVERITY)
 
     # Check the overlap in reference periods
     df_periods = stratus.load_csv_from_blob(
         blob_name=f"{PROJECT_PREFIX}/processed/reference_periods/cleaned_reference_periods.csv"
-    )
+    ).rename(columns={"Country": "location_code"})
     df_peak = date_utils.apply_overlap(
         df_peak, df_periods, "data_driven_period", "data_driven_period_overlap"
     )
@@ -55,6 +54,7 @@ if __name__ == "__main__":
         df_summary["reference_period"] = df_summary["reference_period"].apply(
             date_utils.format_interval
         )
+        df_summary = format_utils.clean_columns(df_summary)
         stratus.upload_csv_to_blob(
             df_summary, f"{PROJECT_PREFIX}/processed/ipc_updates/{fname}", stage="dev"
         )

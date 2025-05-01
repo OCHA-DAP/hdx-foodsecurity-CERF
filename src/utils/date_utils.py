@@ -33,9 +33,9 @@ def apply_overlap(df, df_periods, target_period_column, output_column):
         lambda x: get_period_name(x)
     )
     for idx, row in df_summary.iterrows():
-        iso3 = row["Country"]
+        iso3 = row["location_code"]
         sx = set(row["reference_period_months"])
-        y = df_periods[df_periods.Country == iso3][target_period_column].iloc[0]
+        y = df_periods[df_periods.location_code == iso3][target_period_column].iloc[0]
         if pd.notna(y):
             sy = {month.strip() for month in y.split(",")}
             overlap = get_overlap_fraction(sx, sy)
