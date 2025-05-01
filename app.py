@@ -62,7 +62,7 @@ def sidebar_controls():
                     dbc.Select(
                         id="date-dropdown",
                         # TODO: This is hard coded
-                        options=["2025-04-24"],
+                        options=["2025-04-24", "2025-05-01"],
                         value="2025-04-24",
                         className="mb-3",
                     ),
@@ -182,11 +182,11 @@ def load_data(severity, date):
     column_defs = [{"field": i} for i in df.columns]
     styled_column_defs = []
     for col_def in column_defs:
-        if "_percentage" in col_def["field"]:
+        if "Percentage" in col_def["field"]:
             col_def["cellStyle"] = {
                 "function": "params.value && {'backgroundColor': 'rgb(242,100,90,' + params.value/1 + ')'}"
             }
-        elif "_change" in col_def["field"]:
+        elif "Change" in col_def["field"]:
             col_def["cellStyle"] = {
                 "styleConditions": [
                     {
@@ -199,7 +199,7 @@ def load_data(severity, date):
                     },
                 ],
             }
-        elif "_overlap" in col_def["field"]:
+        elif "Overlap" in col_def["field"]:
             col_def["cellStyle"] = {
                 "styleConditions": [
                     {
