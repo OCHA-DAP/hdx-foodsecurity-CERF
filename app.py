@@ -19,6 +19,15 @@ app.title = "IPC Data Pipeline"
 
 
 def ag_grid():
+    dataTypeDefinitions = {
+        "percentage": {
+            "extendsDataType": "number",
+            "baseDataType": "number",
+            "valueFormatter": {
+                "function": "params.value == null ? '' :  d3.format(',.1%')(params.value)"
+            },
+        }
+    }
     return dag.AgGrid(
         id="data-grid",
         style={
@@ -26,6 +35,7 @@ def ag_grid():
             "margin": "15px",
             "width": f"calc(100vw - {GUTTER * 2}px)",
         },
+        dashGridOptions={"dataTypeDefinitions": dataTypeDefinitions},
     )
 
 
@@ -50,7 +60,7 @@ def sidebar_controls():
                     html.P("Select severity level:"),
                     dbc.Select(
                         id="severity-dropdown",
-                        options=["3+", "4+", "5"],
+                        options=["3", "3+", "4", "4+", "5"],
                         value="3+",
                         className="mb-3",
                     ),
@@ -62,8 +72,8 @@ def sidebar_controls():
                     dbc.Select(
                         id="date-dropdown",
                         # TODO: This is hard coded
-                        options=["2025-04-24", "2025-05-01"],
-                        value="2025-05-01",
+                        options=["2025-05-02"],
+                        value="2025-05-02",
                         className="mb-3",
                     ),
                 ]
@@ -186,6 +196,7 @@ def load_data(severity, date):
             col_def["cellStyle"] = {
                 "function": "params.value && {'backgroundColor': 'rgb(242,100,90,' + params.value/1 + ')'}"
             }
+            col_def["cellDataType"] = "percentage"
         elif "Change" in col_def["field"]:
             col_def["cellStyle"] = {
                 "styleConditions": [
@@ -199,6 +210,7 @@ def load_data(severity, date):
                     },
                 ],
             }
+            col_def["cellDataType"] = "percentage"
         elif "Overlap" in col_def["field"]:
             col_def["cellStyle"] = {
                 "styleConditions": [
@@ -208,8 +220,11 @@ def load_data(severity, date):
                     },
                 ],
             }
+            col_def["cellDataType"] = "percentage"
         elif col_def["field"] == "Country":
             col_def["pinned"] = "left"
+        elif "Number" in col_def["field"]:
+            col_def["valueFormatter"] = {"function": "d3.format(',.0f')(params.value)"}
 
         styled_column_defs.append(col_def)
     return df.to_dict("records"), styled_column_defs

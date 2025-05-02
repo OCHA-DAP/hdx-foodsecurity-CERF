@@ -41,7 +41,7 @@ if __name__ == "__main__":
     )
 
     # Now calculate the values for each year
-    for severity in ["3+", "4+", "5"]:
+    for severity in ["3", "3+", "4", "4+", "5"]:
         df_summary = df_peak
         df_summary["phase"] = severity
         fname = f"annualized_ipc_summary_{REF_YEAR}_{severity}_{now_formatted}.csv"
@@ -56,6 +56,7 @@ if __name__ == "__main__":
             date_utils.format_interval
         )
         df_summary = format_utils.clean_columns(df_summary)
+        df_summary = format_utils.add_country_names(df_summary)
         stratus.upload_csv_to_blob(
             df_summary, f"{PROJECT_PREFIX}/processed/ipc_updates/{fname}", stage="dev"
         )

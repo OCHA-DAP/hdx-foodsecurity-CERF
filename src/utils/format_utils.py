@@ -1,3 +1,11 @@
+import requests
+import pandas as pd
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 def clean_columns(df_summary):
     change_cols = [col for col in df_summary.columns if "_change" in col][::-1]
     percentage_cols = [col for col in df_summary.columns if "_percentage" in col]
@@ -47,3 +55,24 @@ def format_column(col):
         word.capitalize() if i > 0 or not word.isdigit() else word
         for i, word in enumerate(col.split("_"))
     )
+
+
+def add_country_names(df):
+    endpoint = "https://hapi.humdata.org/api/v2/metadata/location"
+    params = {
+        "app_identifier": os.getenv("HAPI_APP_IDENTIFIER"),
+        "output_format": "json",
+    }
+    # Check if the request was successful
+    response = requests.get(endpoint, params=params)
+    json_data = response.json()
+    # Extract the data list from the JSON
+    data_list = json_data.get("data", [])
+    df_response = pd.DataFrame(data_list)
+    df_response = df_response.rename(columns={"code": "Country", "name": "Location"})[
+        ["Country", "Location"]
+    ]
+    df_summary = df.merge(df_response).drop(columns=["Country"])
+    last_col = df_summary.columns[-1]
+    df_summary.insert(0, last_col, df_summary.pop(last_col))
+    return df_summary.rename(columns={"Location": "Country"})
