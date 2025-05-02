@@ -272,7 +272,7 @@ def add_yoy_changes(df, years):
     newer_older_pairs = [(years_str[1], years_str[2]), (years_str[0], years_str[1])]
 
     for newer, older in newer_older_pairs:
-        col_name = f"{newer}_to_{older}_change"
+        col_name = f"{older}_to_{newer}_change"
         df[col_name] = round(df[f"{newer}_percentage"] - df[f"{older}_percentage"], 2)
 
     return df
