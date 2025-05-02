@@ -23,6 +23,7 @@ if __name__ == "__main__":
     # Get the raw data and find the peak hunger periods from the reference year
     logger.info(f"Identifying peak hunger periods based on {REF_YEAR}")
     df = ipc.get_all_ipc()
+    df = ipc.combine_4_plus(df)
     df_peak = ipc.identify_peak_hunger_period(df, REF_YEAR, REF_SEVERITY)
 
     # Check the overlap in reference periods
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     )
 
     # Now calculate the values for each year
-    for severity in ["3+", "4", "5"]:
+    for severity in ["3+", "4+", "5"]:
         df_summary = df_peak
         df_summary["phase"] = severity
         fname = f"annualized_ipc_summary_{REF_YEAR}_{severity}_{now_formatted}.csv"

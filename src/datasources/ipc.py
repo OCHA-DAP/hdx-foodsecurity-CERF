@@ -276,3 +276,16 @@ def add_yoy_changes(df, years):
         df[col_name] = round(df[f"{newer}_percentage"] - df[f"{older}_percentage"], 2)
 
     return df
+
+
+def combine_4_plus(df_all):
+    df = df_all.copy()
+    mapping = {"4": "4+", "5": "4+"}
+    df["ipc_phase"] = df["ipc_phase"].map(mapping).fillna(df["ipc_phase"])
+    dff = df[df.ipc_phase == "4+"]
+    dff = (
+        dff.groupby(["From", "To", "location_code", "ipc_type", "year", "ipc_phase"])
+        .agg({"population_in_phase": "sum", "population_fraction_in_phase": "sum"})
+        .reset_index()
+    )
+    return pd.concat([df_all, dff])

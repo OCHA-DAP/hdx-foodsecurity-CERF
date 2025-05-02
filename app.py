@@ -50,7 +50,7 @@ def sidebar_controls():
                     html.P("Select severity level:"),
                     dbc.Select(
                         id="severity-dropdown",
-                        options=["3+", "4", "5"],
+                        options=["3+", "4+", "5"],
                         value="3+",
                         className="mb-3",
                     ),
@@ -63,7 +63,7 @@ def sidebar_controls():
                         id="date-dropdown",
                         # TODO: This is hard coded
                         options=["2025-04-24", "2025-05-01"],
-                        value="2025-04-24",
+                        value="2025-05-01",
                         className="mb-3",
                     ),
                 ]
