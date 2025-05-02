@@ -33,10 +33,11 @@ from calendar import month_abbr, month_name
 PROJECT_PREFIX = "ds-ufe-food-security"
 
 df_acaps = stratus.load_csv_from_blob(
-    f"{PROJECT_PREFIX}/seasonal-events-calendar-acaps.csv", stage="dev", sep=";"
+    f"{PROJECT_PREFIX}/raw/seasonal-events-calendar-acaps.csv", stage="dev", sep=";"
 )
 df_peak_hunger = stratus.load_csv_from_blob(
-    f"{PROJECT_PREFIX}/peak_lean_season_summary.csv", stage="dev"
+    f"{PROJECT_PREFIX}/processed/reference_periods/peak_lean_season_summary.csv",
+    stage="dev",
 )
 ```
 
@@ -174,11 +175,29 @@ df_merged = df_merged.rename(
 ```
 
 ```python
-df_merged
+stratus.upload_csv_to_blob(
+    df_merged,
+    blob_name=f"{PROJECT_PREFIX}/processed/reference_periods/peak_lean_season_summary_w_acaps.csv",
+)
 ```
 
+Now clean a bit further
+
 ```python
+df = df_merged.rename(
+    columns={
+        "period_long": "data_driven_period",
+        "p1": "expert_period_1",
+        "p2": "expert_period_2",
+    }
+)
+
+# TODO: Add hard-coded periods
+ADDITIONAL_PERIODS = {
+}
+
+df = df[["Country", "data_driven_period", "expert_period_1", "expert_period_2"]]
 stratus.upload_csv_to_blob(
-    df_merged, blob_name=f"{PROJECT_PREFIX}/peak_lean_season_summary_w_acaps.csv"
+    df, f"{PROJECT_PREFIX}/processed/reference_periods/cleaned_reference_periods.csv"
 )
 ```

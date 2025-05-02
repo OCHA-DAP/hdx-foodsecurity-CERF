@@ -2,4 +2,7 @@ requests>=2.31.0
 pandas>=2.1.0
 numpy>=1.24.0
 ocha-stratus==0.1.1
-seaborn
+dash-ag-grid==31.3.1
+dash-bootstrap-components==2.0.2
+coloredlogs==15.0.1
+gunicorn==22.0.0

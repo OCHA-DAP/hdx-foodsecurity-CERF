@@ -1,100 +1,63 @@
-import pandas as pd
-import ocha_stratus as ocha
-from datetime import datetime, timedelta
-import numpy as np
+import ocha_stratus as stratus
+import logging
+import coloredlogs
+from datetime import datetime
 
-from src.utils.data_wrangling import standardize_data, calculate_overlap, print_info_single_country
+from src.datasources import ipc
+from src.config import LOG_LEVEL, PROJECT_PREFIX
+from src.utils import date_utils, format_utils
 
-SEVERITY = '3+'
-PROJECT_PREFIX = "ds-ufe-food-security"
+# References for identifying the peak hunger period
+REF_YEAR = 2024
+REF_SEVERITY = "3+"
 
-# Set the current date
-x = datetime.now()
+logger = logging.getLogger(__name__)
+coloredlogs.install(level=LOG_LEVEL, logger=logger)
 
-# Find the date of a year ago
-x_one_year = x - timedelta(days=365)
+years = [REF_YEAR, REF_YEAR - 1, REF_YEAR - 2]
 
-# Downloaded from https://data.humdata.org/dataset/global-acute-food-insecurity-country-data
-df = ocha.load_csv_from_blob(f"{PROJECT_PREFIX}/ipc_global_national_long.csv", stage="dev")[1:]
-df = standardize_data(df)
-df = df[df['Phase'] == SEVERITY]
+if __name__ == "__main__":
+    now = datetime.now()
+    now_formatted = now.strftime("%Y-%m-%d")
 
-# Filter data for only values regarding the last year or future
-filtered_df = df[(x_one_year <= df["From"]) | ((df["From"] <= x_one_year) & (x_one_year <= df["To"]))]
+    # Get the raw data and find the peak hunger periods from the reference year
+    logger.info(f"Identifying peak hunger periods based on {REF_YEAR}")
+    df = ipc.get_all_ipc()
+    df = ipc.combine_4_plus(df)
+    df_peak = ipc.identify_peak_hunger_period(df, REF_YEAR, REF_SEVERITY)
 
-# If same period present from multiple report, get more recent
-filtered_df = filtered_df.sort_values(['Date of analysis'], ascending=False)
-filtered_df = filtered_df.drop_duplicates(subset=['Country', "From", "To"], keep='first')
-# NOTE: which is the criteria here for selecting?
-grouped_df = filtered_df.sort_values('Percentage', ascending=False)
-grouped_df = grouped_df.drop_duplicates(subset=['Country'], keep='first')
+    # Check the overlap in reference periods
+    df_periods = stratus.load_csv_from_blob(
+        blob_name=f"{PROJECT_PREFIX}/processed/reference_periods/cleaned_reference_periods.csv"
+    ).rename(columns={"Country": "location_code"})
+    df_peak = date_utils.apply_overlap(
+        df_peak, df_periods, "data_driven_period", "data_driven_period_overlap"
+    )
+    df_peak = date_utils.apply_overlap(
+        df_peak, df_periods, "expert_period_1", "expert_period_1_overlap"
+    )
+    df_peak = date_utils.apply_overlap(
+        df_peak, df_periods, "expert_period_2", "expert_period_2_overlap"
+    )
 
-grouped_df["From_one_year_ago"] = pd.to_datetime(grouped_df["From"] - pd.DateOffset(years=1))
-grouped_df["To_one_year_ago"] = pd.to_datetime(grouped_df["To"] - pd.DateOffset(years=1))
-grouped_df.reset_index(inplace=True, drop=True)
-
-# Create empty dataframe
-df_one_year_ago = pd.DataFrame(columns=df.columns.tolist())
-
-# Iterate over each country and find all the relevant reports
-for ii in range(0, len(grouped_df)):
-    country = grouped_df["Country"][ii]
-    date_from = grouped_df.loc[ii,"From_one_year_ago"]
-    date_to = grouped_df.loc[ii, "To_one_year_ago"]
-    time_condition =  (((df["From"] <= date_from) & (df["To"] >= date_to)) |
-                       ((df["From"] >= date_from) & (df["To"] < date_to)) |
-                       ((df["From"] >= date_from) & (df["To"] > date_to)& (df["From"] < date_to))|
-                       ((df["From"] < date_from) & (df["To"] <= date_to)& (df["To"] > date_from)))
-    to_append = df[((df["Country"]==country) & (time_condition))]
-    df_one_year_ago = pd.concat([df_one_year_ago, to_append], ignore_index=True)
-
-df_one_year_ago = df_one_year_ago.sort_values('Percentage', ascending=False)
-
-# NOTE: which is the criteria here for filtering? and what hierarchy?
-df_one_year_ago_filtered = df_one_year_ago.drop_duplicates(subset=['Country'], keep='first')
-
-# Merge dfs for final results
-final_df = grouped_df.merge(df_one_year_ago_filtered, how='left', on='Country', suffixes=("","_1ago"))
-final_df["Difference_num_people_previous_year"] = final_df["Number"] - final_df["Number_1ago"]
-
-calendar = ocha.load_csv_from_blob(f"{PROJECT_PREFIX}/peak_lean_season_summary.csv")[1:]
-final_df = final_df.merge(calendar[["Country", "Start_Month", "End_Month"]], how='left', on='Country')
-final_df = final_df.rename(columns={'Start_Month': 'From_historical', 'End_Month': 'To_historical'})
-#
-# # Print some info
-
-#print_info_single_country(df=final_df, iso3="AFG")
-# Convert dates to datetime
-final_df["From"] = pd.to_datetime(final_df["From"])
-final_df["To"] = pd.to_datetime(final_df["To"])
-
-# Map month names to month numbers
-month_name_to_number = {
-    "January": 1, "February": 2, "March": 3, "April": 4,
-    "May": 5, "June": 6, "July": 7, "August": 8,
-    "September": 9, "October": 10, "November": 11, "December": 12
-}
-
-final_df["From_historical"] = final_df["From_historical"].map(month_name_to_number)
-final_df["To_historical"] = final_df["To_historical"].map(month_name_to_number)
-
-# Calculate total period in days
-final_df["Total days"] = (final_df["To"] - final_df["From"]).dt.days
-
-# Apply overlap calculation
-final_df["Overlap days"] = final_df.apply(calculate_overlap, axis=1)
-
-# Calculate percentage
-final_df["Overlap_months"] =  final_df["Overlap days"]// 30
-final_df["Total_months_peak_hunger_period"] =  final_df["Total days"]// 30
-
-month_to = final_df["To_historical"]
-month_from = final_df["From_historical"]
-
-condition = month_to >= month_from
-diff = np.where(condition, month_to - month_from + 1, (12 - month_from + 1) + month_to)
-
-final_df["Total_months_historical_peak_hunger_period"] = diff
-final_df["Overlap_percentage"] = final_df["Overlap_months"] / final_df["Total_months_historical_peak_hunger_period"] * 100
-final_df.drop(["Overlap days", "Total days"], axis=1, inplace=True)
-final_df.to_csv(f"peak_hunger_period_{x.strftime("%Y%m%d")}.csv")
+    # Now calculate the values for each year
+    for severity in ["3", "3+", "4", "4+", "5"]:
+        df_summary = df_peak
+        df_summary["phase"] = severity
+        fname = f"annualized_ipc_summary_{REF_YEAR}_{severity}_{now_formatted}.csv"
+        for year in years:
+            df_matched = ipc.match_peak_hunger_period(df, df_peak, year, severity)
+            df_summary = df_summary.merge(df_matched, how="left")
+            df_summary[f"{year}_report_period"] = df_summary[
+                f"{year}_report_period"
+            ].apply(date_utils.format_interval)
+        df_summary = ipc.add_yoy_changes(df_summary, years)
+        df_summary["reference_period"] = df_summary["reference_period"].apply(
+            date_utils.format_interval
+        )
+        df_summary = format_utils.clean_columns(df_summary)
+        df_summary = format_utils.add_country_names(df_summary)
+        stratus.upload_csv_to_blob(
+            df_summary, f"{PROJECT_PREFIX}/processed/ipc_updates/{fname}", stage="dev"
+        )
+        logger.info(f"Output file saved successfully to blob: {fname}")
