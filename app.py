@@ -18,6 +18,31 @@ server = app.server
 app.title = "IPC Data Pipeline"
 
 
+def disclaimer_modal():
+    return dbc.Modal(
+        [
+            dbc.ModalHeader(
+                dbc.ModalTitle("Disclaimer", className="header"),
+                close_button=True,
+            ),
+            dbc.ModalBody(
+                [
+                    dcc.Markdown(
+                        """
+                        This is an internal tool under development. For any enquiries please
+                        contact the OCHA Centre for Humanitarian Data via Hannah Ker or Giulia Martini at
+                        [hannah.ker@un.org](mailto:hannah.ker@un.org) and [giulia.martini@un.org](mailto:giulia.martini@un.org).
+                        """
+                    ),
+                ]
+            ),
+        ],
+        id="modal",
+        is_open=True,
+        centered=True,
+    )
+
+
 def ag_grid():
     dataTypeDefinitions = {
         "percentage": {
@@ -119,28 +144,63 @@ def sidebar_controls():
 
 
 def navbar(title):
-    return html.Div(
-        [
-            dbc.NavbarBrand(
-                title,
-                style={"margin": "0"},
-                className=["ms-2", "header", "bold"],
-            ),
-        ],
+    return dbc.Navbar(
+        dbc.Container(
+            [
+                html.A(
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                dbc.NavbarBrand(
+                                    title,
+                                    className=["ms-2", "header", "bold"],
+                                )
+                            ),
+                        ],
+                        align="center",
+                        className="g-0",
+                    ),
+                    href="https://centre.humdata.org/data-science/",
+                    style={"textDecoration": "none"},
+                ),
+                dbc.Col(
+                    html.Img(
+                        src="assets/UN OCHA Logo_hor-blu660_white.png",
+                        height=30,
+                        style={
+                            "position": "absolute",
+                            "right": "140px",
+                            "top": "15px",
+                        },
+                    ),
+                ),
+                dbc.Col(
+                    html.Img(
+                        src="assets/centreforHumdata_white_TransparentBG.png",
+                        height=30,
+                        style={
+                            "position": "absolute",
+                            "right": "15px",
+                            "top": "15px",
+                        },
+                    ),
+                ),
+            ],
+            fluid=True,
+        ),
         style={
-            "backgroundColor": "#1bb580ff",
-            "color": "white",
             "height": f"{NAVBAR_HEIGHT}px",
+            "margin": "0px",
             "padding": "10px",
-            "display": "flex",
-            "justifyContent": "space-between",
-            "alignItems": "center",
         },
+        color="#1bb580ff",
+        dark=True,
     )
 
 
 layout = [
     navbar(title="IPC Data Pipeline"),
+    disclaimer_modal(),
     html.Div(
         [sidebar_controls(), ag_grid()],
         style={"display": "flex", "flexDirection": "row"},
