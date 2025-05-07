@@ -132,15 +132,34 @@ def sidebar_controls():
                 ],
                 className="d-grid gap-2",
             ),
+            # Spacer div to push the disclaimer to the bottom
+            html.Div(style={"flex": "1"}),
+            html.Div(
+                [
+                    dcc.Markdown(
+                        """
+                        **Disclaimer**
+
+                        This is an internal tool, not intended for public distribution or use.
+                        """,
+                    ),
+                ],
+                style={
+                    "padding": "10px",
+                    "backgroundColor": "#f8f9fa",
+                },
+            ),
         ],
         style={
             "width": "25vw",
             "padding": "20px",
             "backgroundColor": "#ffffff",
             "height": "calc(100vh - 60px)",
-            "overflowY": "auto",
+            "display": "flex",
+            "flexDirection": "column",
         },
     )
+
 
 
 def navbar(title):
