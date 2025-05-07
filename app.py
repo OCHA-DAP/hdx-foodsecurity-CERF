@@ -3,6 +3,7 @@ from dash import html, Output, Input, callback, State, dcc
 import dash
 import dash_ag_grid as dag
 import ocha_stratus as stratus
+from datetime import datetime
 
 
 NAVBAR_HEIGHT = 60
@@ -74,12 +75,13 @@ def sidebar_controls():
                     This application displays processed IPC data for use by CERF  to identify year-on-year changes
                     in food security across countries. See
                     [here](https://docs.google.com/document/d/15o6f5yPIl3p3sj7NNw2MoHg6f7DHzwtCPfKRlfU2PJE/edit?tab=t.0#heading=h.ieffsjdjd8lt)
-                    for an overview of the methods and description of each column.
+                    for an overview of the methods and description of each column. Data is updated **daily**.
                     """,
                         style={"marginBottom": "7px"},
                     )
                 ]
             ),
+            html.Hr(),
             html.Div(
                 [
                     html.P("Select severity level:"),
@@ -93,33 +95,10 @@ def sidebar_controls():
             ),
             html.Div(
                 [
-                    html.P("Select date updated:"),
-                    dbc.Select(
-                        id="date-dropdown",
-                        # TODO: This is hard coded
-                        options=["2025-05-02"],
-                        value="2025-05-02",
-                        className="mb-3",
-                    ),
-                ]
-            ),
-            html.Div(
-                [
                     dbc.Button("Download to CSV", color="primary", id="csv-button"),
                 ],
                 className="d-grid gap-2",
-            ),
-            html.Hr(),
-            html.Div(
-                [
-                    dcc.Markdown(
-                        """
-                    For reference, historical IPC data has been processed to estimate a single peak hunger period per country.
-                    Overlap with these periods are reported in the `*_overlap` columns of the table visualized here.
-                    """,
-                        style={"marginBottom": "7px"},
-                    )
-                ]
+                style={"marginBottom": "10px"},
             ),
             html.Div(
                 [
@@ -159,7 +138,6 @@ def sidebar_controls():
             "flexDirection": "column",
         },
     )
-
 
 
 def navbar(title):
@@ -235,11 +213,14 @@ app.layout = html.Div(layout)
     Output("data-grid", "csvExportParams"),
     Input("csv-button", "n_clicks"),
     State("severity-dropdown", "value"),
-    State("date-dropdown", "value"),
 )
-def export_data_as_csv(n_clicks, severity, date):
+def export_data_as_csv(n_clicks, severity):
+    now = datetime.now()
+    now_formatted = now.strftime("%Y-%m-%d")
     if n_clicks:
-        return True, {"fileName": f"annualized_ipc_conditions_{severity}_{date}.csv"}
+        return True, {
+            "fileName": f"annualized_ipc_conditions_{severity}_{now_formatted}.csv"
+        }
     return False, {}
 
 
@@ -261,11 +242,12 @@ def download_hunger_period_reference(n_clicks):
     Output("data-grid", "rowData"),
     Output("data-grid", "columnDefs"),
     Input("severity-dropdown", "value"),
-    Input("date-dropdown", "value"),
 )
-def load_data(severity, date):
+def load_data(severity):
+    now = datetime.now()
+    now_formatted = now.strftime("%Y-%m-%d")
     df = stratus.load_csv_from_blob(
-        f"ds-ufe-food-security/processed/ipc_updates/annualized_ipc_summary_2024_{severity}_{date}.csv"
+        f"ds-ufe-food-security/processed/ipc_updates/annualized_ipc_summary_{severity}_{now_formatted}.csv"
     )
 
     column_defs = [{"field": i} for i in df.columns]
