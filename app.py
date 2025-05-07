@@ -219,7 +219,7 @@ def export_data_as_csv(n_clicks, severity):
     now_formatted = now.strftime("%Y-%m-%d")
     if n_clicks:
         return True, {
-            "fileName": f"annualized_ipc_conditions_{severity}_{now_formatted}.csv"
+            "fileName": f"annualized_ipc_conditions_{severity}_{now_formatted}_TEST.csv"
         }
     return False, {}
 

@@ -45,7 +45,8 @@ def apply_overlap(df, df_periods, target_period_column, output_column):
     return df_summary.drop(columns=["reference_period_months"])
 
 
-def get_ref_period(row, ref_year):
+def get_ref_period(row):
+    ref_year = row["reference_year"]
     # Account for the Jan - Dec cross
     from_year = ref_year - (1 if row["From"].month > row["To"].month else 0)
     from_date = pd.Timestamp(
