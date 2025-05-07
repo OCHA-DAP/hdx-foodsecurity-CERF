@@ -3,7 +3,7 @@ from dash import html, Output, Input, callback, State, dcc
 import dash
 import dash_ag_grid as dag
 import ocha_stratus as stratus
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 NAVBAR_HEIGHT = 60
@@ -244,10 +244,10 @@ def download_hunger_period_reference(n_clicks):
     Input("severity-dropdown", "value"),
 )
 def load_data(severity):
-    now = datetime.now()
-    now_formatted = now.strftime("%Y-%m-%d")
+    yesterday = datetime.now() - timedelta(days=1)
+    yesterday_formatted = yesterday.strftime("%Y-%m-%d")
     df = stratus.load_csv_from_blob(
-        f"ds-ufe-food-security/processed/ipc_updates/annualized_ipc_summary_{severity}_{now_formatted}.csv"
+        f"ds-ufe-food-security/processed/ipc_updates/annualized_ipc_summary_{severity}_{yesterday_formatted}.csv"
     )
 
     column_defs = [{"field": i} for i in df.columns]
