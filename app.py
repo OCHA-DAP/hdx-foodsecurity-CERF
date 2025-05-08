@@ -35,12 +35,36 @@ def disclaimer_modal():
                         [hannah.ker@un.org](mailto:hannah.ker@un.org) and [giulia.martini@un.org](mailto:giulia.martini@un.org).
                         """
                     ),
+                    dcc.Markdown(
+                        """
+                        All statistics are compiled based on an estimated Peak Hunger Period (PHP) for each country, which
+                        is defined to enable meaningful year-on-year comparisons. This PHP is set based on the period within
+                        the past year that has the greatest percentage of the population in Phase 3+. **Users should be aware**
+                        that this simplified approach may not accurately capture more complex cases, such as dual lean seasons or
+                        subnational differentiation. Food insecurity driven by irregular factors such as conflict may also skew these
+                        outputs from what might be expected. Refer to the
+                        [methodology](https://docs.google.com/document/d/15o6f5yPIl3p3sj7NNw2MoHg6f7DHzwtCPfKRlfU2PJE/edit?tab=t.0) for more details.
+
+                        """,
+                        style={"marginTop": "10px"},
+                    ),
+                    dcc.Markdown(
+                        """
+                        The results displayed in this app are from an **entirely automated analysis**. Users may wish to refer to the [IPC reports](https://www.ipcinfo.org/)
+                        directly in cases where local knowledge overrides the analytically-estimated Peak Hunger Periods.
+                        """,
+                        style={"marginTop": "10px"},
+                    ),
                 ]
+            ),
+            dbc.ModalFooter(
+                dbc.Button("I understand", id="close", className="ms-auto", n_clicks=0)
             ),
         ],
         id="modal",
         is_open=True,
         centered=True,
+        size="lg",
     )
 
 
@@ -103,7 +127,7 @@ def sidebar_controls():
             html.Div(
                 [
                     dbc.Button(
-                        "Download Hunger Periods",
+                        "Download Reference Hunger Periods",
                         color="secondary",
                         id="reference-download-button",
                     ),
@@ -206,6 +230,17 @@ layout = [
 
 
 app.layout = html.Div(layout)
+
+
+@app.callback(
+    Output("modal", "is_open"),
+    Input("close", "n_clicks"),
+    State("modal", "is_open"),
+)
+def toggle_modal(n1, is_open):
+    if n1:
+        return not is_open
+    return is_open
 
 
 @callback(
