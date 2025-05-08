@@ -19,7 +19,7 @@ if __name__ == "__main__":
     ref_severity = "3+"
 
     # Get the raw data and find the peak hunger periods from the reference year
-    logger.info(f"Identifying peak hunger periods based on {ref_year}")
+    logger.info("Identifying peak hunger periods...")
     df = ipc.get_all_ipc()
     df = ipc.combine_4_plus(df)
     df_peak = ipc.identify_peak_hunger_period(df, ref_year, ref_severity)
