@@ -7,24 +7,22 @@ from src.datasources import ipc
 from src.config import LOG_LEVEL, PROJECT_PREFIX
 from src.utils import date_utils, format_utils
 
-# References for identifying the peak hunger period
-REF_YEAR = 2024
-REF_SEVERITY = "3+"
-
 logger = logging.getLogger(__name__)
 coloredlogs.install(level=LOG_LEVEL, logger=logger)
 
-years = [REF_YEAR, REF_YEAR - 1, REF_YEAR - 2]
 
 if __name__ == "__main__":
     now = datetime.now()
     now_formatted = now.strftime("%Y-%m-%d")
+    ref_year = now.year
+    years = [ref_year, ref_year - 1, ref_year - 2]
+    ref_severity = "3+"
 
     # Get the raw data and find the peak hunger periods from the reference year
-    logger.info(f"Identifying peak hunger periods based on {REF_YEAR}")
+    logger.info("Identifying peak hunger periods...")
     df = ipc.get_all_ipc()
     df = ipc.combine_4_plus(df)
-    df_peak = ipc.identify_peak_hunger_period(df, REF_YEAR, REF_SEVERITY)
+    df_peak = ipc.identify_peak_hunger_period(df, ref_year, ref_severity)
 
     # Check the overlap in reference periods
     df_periods = stratus.load_csv_from_blob(
@@ -44,7 +42,7 @@ if __name__ == "__main__":
     for severity in ["3", "3+", "4", "4+", "5"]:
         df_summary = df_peak
         df_summary["phase"] = severity
-        fname = f"annualized_ipc_summary_{REF_YEAR}_{severity}_{now_formatted}.csv"
+        fname = f"annualized_ipc_summary_{severity}_{now_formatted}.csv"
         for year in years:
             df_matched = ipc.match_peak_hunger_period(df, df_peak, year, severity)
             df_summary = df_summary.merge(df_matched, how="left")

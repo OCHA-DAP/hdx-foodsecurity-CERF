@@ -14,7 +14,7 @@ def clean_columns(df_summary):
     period_cols = [col for col in df_summary.columns if "report_period" in col]
 
     final_cols = (
-        ["location_code", "reference_year", "phase", "reference_period"]
+        ["location_code", "phase", "reference_period"]
         + change_cols
         + percentage_cols
         + number_cols

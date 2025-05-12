@@ -7,6 +7,7 @@ from src.utils import date_utils
 import requests
 from dotenv import load_dotenv
 import os
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -137,8 +138,9 @@ def identify_peak_hunger_period(
     """
     df = df.copy()
     # Filter to a specific year
+    last_year = datetime.now() - timedelta(days=365)
     # Note that `year` is associated with the `To` date
-    df_filtered = df[(df["year"] == year) & (df["ipc_phase"] == severity)]
+    df_filtered = df[(df["To"] >= last_year) & (df["ipc_phase"] == severity)]
     # Get the most recent report if there are duplicates for the same time period
     custom_order = ["current", "second_projection", "first_projection"]
     df_filtered["ipc_type"] = pd.Categorical(
@@ -165,7 +167,9 @@ def identify_peak_hunger_period(
         logger.warning(
             f"Warning! {len(missing_countries)} countries do not have reports from {year}: {missing_countries}"
         )
-    df_filtered["reference_year"] = year
+    df_filtered["reference_year"] = df_filtered.reference_period.apply(
+        lambda x: x.right.year
+    )
 
     return (
         df_filtered[["location_code", "reference_year", "reference_period"]]
@@ -203,8 +207,6 @@ def match_peak_hunger_period(
         DataFrame containing food insecurity data for the specified year that matches
         the peak hunger period, with columns renamed to include the year.
     """
-    ref_year = int(df_peak.reference_year[0])
-
     # Create a new DataFrame explicitly instead of a view
     df_year = df[(df.year == year) & (df["ipc_phase"] == severity)].copy()
 
@@ -212,14 +214,14 @@ def match_peak_hunger_period(
     df_year.loc[:, f"{year}_report_period"] = df_year.apply(
         lambda x: pd.Interval(left=x["From"], right=x["To"], closed="both"), axis=1
     )
+    df_merged = df_year.merge(df_peak)
 
     # Set ref_period using loc
-    df_year.loc[:, "ref_period"] = df_year.apply(
-        lambda row: date_utils.get_ref_period(row, ref_year),
+    df_merged.loc[:, "ref_period"] = df_merged.apply(
+        lambda row: date_utils.get_ref_period(row),
         axis=1,
     )
 
-    df_merged = df_year.merge(df_peak)
     df_merged["has_overlap"] = df_merged.apply(
         lambda row: row["ref_period"].overlaps(row["reference_period"]),
         axis=1,
