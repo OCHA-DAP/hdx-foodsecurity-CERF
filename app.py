@@ -38,7 +38,7 @@ def disclaimer_modal():
                     dcc.Markdown(
                         """
                         All statistics are compiled based on an estimated Peak Hunger Period (PHP) for each country, which
-                        is defined to enable meaningful year-on-year comparisons. This PHP is set based on the period within
+                        is defined to enable meaningful year-on-year comparisons. This PHP is the period within
                         the past year that has the greatest percentage of the population in Phase 3+. **Users should be aware**
                         that this simplified approach may not accurately capture more complex cases, such as dual lean seasons or
                         subnational differentiation. Food insecurity driven by irregular factors such as conflict may also skew these

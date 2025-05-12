@@ -1,7 +1,7 @@
 import ocha_stratus as stratus
 import logging
 import coloredlogs
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from src.datasources import ipc
 from src.config import LOG_LEVEL, PROJECT_PREFIX
@@ -12,7 +12,7 @@ coloredlogs.install(level=LOG_LEVEL, logger=logger)
 
 
 if __name__ == "__main__":
-    now = datetime.now()
+    now = datetime.now() - timedelta(days=1)
     now_formatted = now.strftime("%Y-%m-%d")
     ref_year = now.year
     years = [ref_year, ref_year - 1, ref_year - 2]
