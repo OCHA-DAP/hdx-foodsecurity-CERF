@@ -25,5 +25,6 @@ jobs:
     - name: Run script
       run: python main.py
       env:
+        DSCI_AZ_BLOB_DEV_SAS: ${{ secrets.DSCI_AZ_BLOB_DEV_SAS}}
         DSCI_AZ_BLOB_DEV_SAS_WRITE: ${{ secrets.DSCI_AZ_BLOB_DEV_SAS_WRITE }}
         HAPI_APP_IDENTIFIER: ${{ secrets.HAPI_APP_IDENTIFIER }}
