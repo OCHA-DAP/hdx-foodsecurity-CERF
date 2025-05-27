@@ -61,6 +61,6 @@ def get_ref_period(row):
 def format_interval(interval):
     if pd.isna(interval):
         return np.nan
-    start_date = interval.left.strftime("%b %Y")
-    end_date = interval.right.strftime("%b %Y")
+    start_date = interval.left.strftime("%b")
+    end_date = interval.right.strftime("%b")
     return f"{start_date} to {end_date}"
