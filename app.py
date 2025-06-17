@@ -111,7 +111,7 @@ def sidebar_controls():
                     html.P("Select severity level:"),
                     dbc.Select(
                         id="severity-dropdown",
-                        options=["3", "3+", "4", "4+", "5"],
+                        options=["3", "3+", "4", "4+", "5", "all"],
                         value="3+",
                         className="mb-3",
                     ),

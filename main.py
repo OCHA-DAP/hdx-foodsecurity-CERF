@@ -1,4 +1,5 @@
 import ocha_stratus as stratus
+import pandas as pd
 import logging
 import coloredlogs
 from datetime import datetime, timedelta
@@ -38,6 +39,7 @@ if __name__ == "__main__":
         df_peak, df_periods, "expert_period_2", "expert_period_2_overlap"
     )
 
+    df_all = []  # Collect all severity-level outputs
     # Now calculate the values for each year
     for severity in ["3", "3+", "4", "4+", "5"]:
         df_summary = df_peak
@@ -55,7 +57,21 @@ if __name__ == "__main__":
         )
         df_summary = format_utils.clean_columns(df_summary)
         df_summary = format_utils.add_country_names(df_summary)
+
+        # Append to combined list
+        df_all.append(df_summary.copy())
+
         stratus.upload_csv_to_blob(
             df_summary, f"{PROJECT_PREFIX}/processed/ipc_updates/{fname}", stage="dev"
         )
         logger.info(f"Output file saved successfully to blob: {fname}")
+
+    # After the loop: combine and upload all data
+    df_combined = pd.concat(df_all, ignore_index=True)
+    combined_fname = f"annualized_ipc_summary_all_{now_formatted}.csv"
+    stratus.upload_csv_to_blob(
+        df_combined,
+        f"{PROJECT_PREFIX}/processed/ipc_updates/{combined_fname}",
+        stage="dev"
+    )
+    logger.info(f"Combined output file saved successfully to blob: {combined_fname}")
